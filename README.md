@@ -1,5 +1,6 @@
 # CARDUI
 An open-source llm helper library.
 
-hello
-
+# Available Tools
+- batcher
+- safe_call

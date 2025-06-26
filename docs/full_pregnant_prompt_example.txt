@@ -1,0 +1,35 @@
+
+# prompt == f"""
+# you are a system designed to summarize comments. 
+
+# Here are the comment sets:
+# { "comment_sets": [{
+#             "ID": 1,
+#             "COMMENTS": [
+#                 "This is the first comment.",
+#                 "This is the second comment.",
+#                 "This is the third comment."
+#             ]
+#         }] }
+
+
+# Respond in valid JSON format with the following output format:
+
+# {"generations": [
+#     {
+#         "ID": 1,
+#         "SUMMARY": "This is a summary of the comments."
+#     }
+# ]}
+# """
+
+# PATTERN= "#COMMENTS" # the name of the exact replaceable string in the prompt
+# INPUT_OBJECT_NAME = "comment_sets" # the name of the object that will be replaced in the prompt
+# AUTO_CREATED_ID_NAME = "ID" #this they shouldn't be able to set, but it should change if one of their columns is already called that. what to do in this case?
+# INPUT_COLUMN_NAMES = #the names of the columns in the input df
+# INPUT_JSON_KEYS = #the keys in the input json that will be used to fill the columns
+# OUTPUT_OBJECT_NAME = "generations" #the name of the object that will be returned in the output json
+# OUTPUT_JSON_KEYS = #the keys in the output json that will be used to fill the columns
+# OUTPUT_COLUMN_NAMES = #the names of the columns in the output df
+# include_full_response = True #can be disabled
+# full_response_column_name = "LLM_RESPONSE"

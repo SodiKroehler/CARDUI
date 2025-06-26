@@ -1,10 +1,36 @@
 from .structura import Structura
 import os
+import time
+
+
 class Machina:
     def __init__(self, model_provider, model_name):
         self.model_provider = model_provider
+        if model_provider not in ["OpenAI", "Anthropic", "Mistral", "Google", "CUSTOM"]:
+            raise ValueError("Invalid model provider. Must be one of: OpenAI, Anthropic, Mistral, Google, CUSTOM.")
         self.model_name = model_name
         self.client = None
+
+        if self.model_provider == "CUSTOM":
+            self._enforce_overrides(["auth", "call_full"])
+
+        #rate limiting
+        self.max_retries = 4
+        self.base_delay = 1.0
+        self.backoff_factor = 2.0
+        self.warn_retries = 2
+        self.errors_encountered = 0 #is used in batcher to stop even if best_effort is True
+
+    def _enforce_overrides(self, method_names):
+        for method_name in method_names:
+            base_method = getattr(Machina, method_name, None)
+            sub_method = getattr(self.__class__, method_name, None)
+            if base_method is None or sub_method is None:
+                raise NotImplementedError(f"Missing required method: {method_name}")
+            if sub_method == base_method:
+                raise NotImplementedError(
+                    f"For CUSTOM provider, you must override `{method_name}()` in your subclass."
+                )
     
     def get_default_api_key_name(self):
         if self.model_provider == "OpenAI":
@@ -24,7 +50,7 @@ class Machina:
         else:
             api_key = os.getenv(self.get_default_api_key_name())
 
-        if not api_key:
+        if not api_key and self.model_provider != "CUSTOM":
             raise ValueError(f"Default API key for {self.model_provider} not found (looking for {self.get_default_api_key_name()}).")
         
         if self.model_provider == "OpenAI":
@@ -128,15 +154,36 @@ class Machina:
         return None
     
 
-    def call(self, prompt):
-        response = self.call_full(prompt)
-        if self.model_provider == "OpenAI":
-            return response.choices[0].message.content
-        elif self.model_provider == "Anthropic":
-            return response.content[0].text
-        elif self.model_provider == "Mistral":
-            return response.choices[0].message.content
-        elif self.model_provider == "Google":
-            return response.text
-        
-        return None
+    def call(self, prompt, structura=None):
+        delay = self.base_delay
+        retries = 0
+        exception = None
+        while retries < self.max_retries:
+            try:
+                response = self.call_full(prompt, structura)
+                if self.model_provider == "OpenAI":
+                    return response.choices[0].message.content
+                elif self.model_provider == "Anthropic":
+                    return response.content[0].text
+                elif self.model_provider == "Mistral":
+                    return response.choices[0].message.content
+                elif self.model_provider == "Google":
+                    return response.text
+                return response
+            except Exception as e:
+                if retries >= self.warn_retries:
+                    print(f"Warning: {e}. Retrying in {delay} seconds...")
+                self.errors_encountered += 1
+                time.sleep(delay)
+                delay *= self.backoff_factor
+                retries += 1
+                exception = e
+        raise Exception(f"Failed to get a response after {self.max_retries} retries. Last error: {exception}")
+
+    def cost_estimate(self, structura:Structura, df):
+        #very pessimistic estimate and not accurate, but useful for warning
+        #TODO_EVENTUALLY: make this more accurate
+        tokens_per_row = (structura.MAX_ANTICIPATED_INPUT_WORDS + structura.MAX_ANTICIPATED_OUTPUT_WORDS + len(structura.PROMPT.split())) * 1.3
+        total_tokens = df.shape[0] * tokens_per_row
+        fouro_price_per_thousand = 0.05
+        return total_tokens / 1000 * fouro_price_per_thousand

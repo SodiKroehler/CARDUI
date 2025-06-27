@@ -31,6 +31,11 @@ jobs:
           pip install -r requirements.txt
           pip install build pytest twine
 
+      - name: Check secrets exist
+          run: |
+          if [ -z "$OPENAI_API_KEY" ]; then echo "Missing OPENAI_API_KEY"; exit 1; fi
+          echo "Secrets found (values masked)."
+
       - name: Set PYTHONPATH 
         run: echo "PYTHONPATH=src" >> $GITHUB_ENV
           

@@ -32,9 +32,12 @@ jobs:
           pip install build pytest twine
 
       - name: Check secrets exist
-          run: |
+        run: |
           if [ -z "$OPENAI_API_KEY" ]; then echo "Missing OPENAI_API_KEY"; exit 1; fi
-          echo "Secrets found (values masked)."
+          if [ -z "$ANTHROPIC_API_KEY" ]; then echo "Missing ANTHROPIC_API_KEY"; exit 1; fi
+          if [ -z "$GOOGLE_API_KEY" ]; then echo "Missing GOOGLE_API_KEY"; exit 1; fi
+          if [ -z "$MISTRAL_API_KEY" ]; then echo "Missing MISTRAL_API_KEY"; exit 1; fi
+          echo "All secrets found (values masked)."
 
       - name: Set PYTHONPATH 
         run: echo "PYTHONPATH=src" >> $GITHUB_ENV

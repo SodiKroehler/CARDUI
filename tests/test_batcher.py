@@ -106,14 +106,20 @@ class test_batcher_runs(unittest.TestCase):
         struct1.OUTPUT_JSON_KEYS = ["score"]
         struct1.OUTPUT_JSON_KEY_DESCRIPTIONS = ["A sentiment score from 1 (very negative) to 10 (very positive)"]
         struct1.OUTPUT_COLUMN_NAMES = ["string_score"]
-        struct1.MAX_ANTICIPATED_OUTPUT_LENGTH = 20
-        struct1.batch_size = struct1.get_dynamic_batch_size() #sets the max to fit in the context window
+        struct1.MAX_ANTICIPATED_OUTPUT_WORDS = 20
+        struct1.MAX_ANTICIPATED_INPUT_WORDS = 50
+
+        custmod = CustomMachina("CUSTOM", "CUSTOM")
+        custmod.auth("CUSTOM")
+
         struct1.verbose = True
         struct1.jsonify()  # Enable JSON-based batching and parsing
 
+        struct1.batch_size = struct1.get_dynamic_batch_size(custmod) #sets the max to fit in the context window
+
         sdf = pd.DataFrame({
             "customer_name": ["Alphonzo Dwindli", "Gertrude Maximillian"],
-            "body": ["Gubernatorial Delights found in this ice cream.", "Sasquatach wouldn't eat this ice cream. It's horrible."]
+            "review_body": ["Gubernatorial Delights found in this ice cream.", "Sasquatach wouldn't eat this ice cream. It's horrible."]
         })
 
         rdf, duration = Batcher.call_chunked(sdf, custmod, struct1)

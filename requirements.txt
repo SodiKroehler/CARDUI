@@ -6,3 +6,8 @@ tqdm
 anthropic
 mistralai
 google-genai
+rapidfuzz
+os
+time
+re
+json

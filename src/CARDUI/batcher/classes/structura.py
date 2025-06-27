@@ -75,16 +75,16 @@ class Structura:
         self.jsonified = True
 
 
-    def get_dynamic_batch_size(self):
+    def get_dynamic_batch_size(self, machina):
         if not self.jsonified or self.MAX_ANTICIPATED_OUTPUT_WORDS < 0 or self.MAX_ANTICIPATED_INPUT_WORDS < 0:
-            raise ValueError("Cannot get dynamic batch size. Please ensure the prompt is jsonified and MAX_ANTICIPATED_OUTPUT_LENGTH is set.")
+            raise ValueError("Cannot get dynamic batch size. Please ensure the prompt is jsonified and MAX_ANTICIPATED_OUTPUT_WORDS and MAX_ANTICIPATED_INPUT_WORDS are set.")
         
         output_overhead = len(self.OUTPUT_JSON_KEYS) * 10
         total_input_tokens = (self.MAX_ANTICIPATED_INPUT_WORDS + len(self.PROMPT.split())) * 1.3 #prompt by now includes overhead
         total_output_tokens = (self.MAX_ANTICIPATED_OUTPUT_WORDS + output_overhead) * 1.3
 
         # Get the context window size for the current model
-        context_window = MODEL_CONTEXT_WINDOW_TOKENS.get((self.model_provider, self.model_name), {"input": 0, "output": 0})
+        context_window = MODEL_CONTEXT_WINDOW_TOKENS.get((machina.model_provider, machina.model_name), {"input": 0, "output": 0})
         input_tokens = context_window["input"]
         output_tokens = context_window["output"]
 

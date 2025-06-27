@@ -104,26 +104,26 @@ class Machina:
             response = self.client.chat.completions.create(
                 model=self.model_name,
                 messages=[
-                    {"role": "developer", "content": structura.system_prompt},
+                    {"role": "developer", "content": structura.SYSTEM_PROMPT},
                     {
                         "role": "user",
                         "content": prompt,
                     },
                 ],
-                temperature=structura.temp,
-                max_tokens=structura.max_tokens
+                temperature=structura.TEMP,
+                max_tokens=structura.MAX_OUTPUT_TOKENS
             )
             return response 
         
         elif self.model_provider == "Anthropic":
             response = self.client.messages.create(
                 model=self.model_name,
-                max_tokens=structura.max_tokens,
-                temperature=structura.temp,
+                max_tokens=structura.MAX_OUTPUT_TOKENS,
+                temperature=structura.TEMP,
                 messages=[
                     {"role": "user", "content": prompt}
                 ],
-                system=structura.system_prompt
+                system=structura.SYSTEM_PROMPT
             )
 
             return response
@@ -131,11 +131,11 @@ class Machina:
             response = self.client.chat.complete(
                 model=self.model_name,
                 messages=[
-                    {"role": "system", "content": structura.system_prompt},
+                    {"role": "system", "content": structura.SYSTEM_PROMPT},
                     {"role": "user", "content": prompt}
                 ],
-                max_tokens=structura.max_tokens,
-                temperature=structura.temp
+                max_tokens=structura.MAX_OUTPUT_TOKENS,
+                temperature=structura.TEMP
             )
             return response
         elif self.model_provider == "Google":
@@ -144,9 +144,9 @@ class Machina:
             response = self.client.models.generate_content(
                 model=self.model_name,
                 config=types.GenerateContentConfig(
-                    system_instruction=structura.system_prompt,
-                    max_output_tokens=structura.max_tokens,
-                    temperature=structura.temp,
+                    system_instruction=structura.SYSTEM_PROMPT,
+                    max_output_tokens=structura.MAX_OUTPUT_TOKENS,
+                    temperature=structura.TEMP,
                 ),
                 contents=prompt
             )
@@ -180,7 +180,7 @@ class Machina:
                 exception = e
         raise Exception(f"Failed to get a response after {self.max_retries} retries. Last error: {exception}")
 
-    def cost_estimate(self, structura:Structura, df):
+    def cost_estimate(self, structura, df):
         #very pessimistic estimate and not accurate, but useful for warning
         #TODO_EVENTUALLY: make this more accurate
         tokens_per_row = (structura.MAX_ANTICIPATED_INPUT_WORDS + structura.MAX_ANTICIPATED_OUTPUT_WORDS + len(structura.PROMPT.split())) * 1.3

@@ -92,7 +92,7 @@ class Batcher:
     def call_chunked(df, model: Machina, bd: Structura):
         if df.shape[0] < 1:
             print("An empty batch was passed in. Please confirm this is intentional.")
-            return None
+            return df, 0
         
         if df.shape[0] > 50000:
             cost = model.get_cost_warning(df.shape[0], bd.BATCH_SIZE)
@@ -102,7 +102,7 @@ class Batcher:
                 response = input().strip().lower()
                 if response != 'y':
                     print("Batch processing cancelled by user.")
-                    return None
+                    return None, 0
                 else:
                     print("Continuing with batch processing...")
         

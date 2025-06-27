@@ -39,15 +39,14 @@ jobs:
           if [ -z "$MISTRAL_API_KEY" ]; then echo "Missing MISTRAL_API_KEY"; exit 1; fi
           echo "All secrets found (values masked)."
 
-      - name: Set PYTHONPATH 
+      - name: Set PYTHONPATH
         run: echo "PYTHONPATH=src" >> $GITHUB_ENV
-          
+
       - name: Run tests
         run: pytest
 
       - name: Build package
-        run: |
-          python -m build
+        run: python -m build
 
       - name: Publish to PyPI
         env:

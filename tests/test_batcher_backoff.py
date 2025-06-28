@@ -2,8 +2,8 @@
 
 import unittest
 from unittest.mock import patch, MagicMock
-from CARDUI import Machina, Structura, Utilitas
-from CARDUI import Batcher
+from cardui import Machina, Structura, Utilitas
+from cardui import Batcher
 import pandas as pd
 import sys
 import os

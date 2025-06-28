@@ -1,5 +1,5 @@
 import unittest
-from CARDUI import Machina, Structura
+from cardui import Machina, Structura
 import os
 import pytest
 

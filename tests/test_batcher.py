@@ -3,8 +3,8 @@
 
 import unittest
 from unittest.mock import patch, MagicMock
-from CARDUI import Machina, Structura, Utilitas
-from CARDUI import Batcher
+from cardui import Machina, Structura, Utilitas
+from cardui import Batcher
 import pandas as pd
 import sys
 import os
@@ -115,12 +115,13 @@ class test_batcher_runs(unittest.TestCase):
         struct1.verbose = True
         struct1.jsonify()  # Enable JSON-based batching and parsing
 
-        struct1.batch_size = struct1.get_dynamic_batch_size(custmod) #sets the max to fit in the context window
+        
 
         sdf = pd.DataFrame({
             "customer_name": ["Alphonzo Dwindli", "Gertrude Maximillian"],
             "review_body": ["Gubernatorial Delights found in this ice cream.", "Sasquatach wouldn't eat this ice cream. It's horrible."]
         })
+        struct1.batch_size = custmod.get_max_batch_size(struct1, sdf) #sets the max to fit in the context window
 
         rdf, duration = Batcher.call_chunked(sdf, custmod, struct1)
 

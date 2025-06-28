@@ -41,7 +41,7 @@ class Batcher:
             print(f"Processing rows {orig_batch_low} to {orig_batch_high}")
 
         response = model.call(prompt, bd)
-
+        
         if bd.verbose:
             print(f"Obtained response for rows {orig_batch_low} to {orig_batch_high}, beginning parsing")
 
@@ -54,19 +54,29 @@ class Batcher:
             output = Utilitas.p_json(response, has_separator=True, separator=bd.json_separator, verbose=bd.verbose, best_effort=bd.best_effort)
 
             if output is None:
-                print(f"Error encountered while parsing JSON for rows {orig_batch_low} to {orig_batch_high}.")
+                if bd.verbose:
+                    print(f"The JSON parser returned None for rows {orig_batch_low} to {orig_batch_high}.")
                 batch.loc[0, bd.full_response_column_name] = response
                 batch.drop(columns=[bd.auto_created_id_name], inplace=True)
                 return batch
             
             output_by_index = {}
+
+            output = Utilitas.fuzz_get(output, bd.OUTPUT_OBJECT_NAME, list, None)
+            if output is None:
+                if bd.verbose:
+                    print(f"The output object '{bd.OUTPUT_OBJECT_NAME}' was not found in the response for rows {orig_batch_low} to {orig_batch_high}.")
+                batch.loc[0, bd.full_response_column_name] = response
+                batch.drop(columns=[bd.auto_created_id_name], inplace=True)
+                return batch
+            
             for item in output:
                 theID = Utilitas.fuzz_get(item, bd.auto_created_id_name, str, None)
                 if theID is not None:
                     o = {}
                     for jtarget in bd.OUTPUT_JSON_KEYS:
                         o[jtarget] = Utilitas.fuzz_get(item, jtarget, str, None)
-                    output_by_index[theID] = o
+                    output_by_index[int(theID)] = o
 
             for target_col, json_key in zip(bd.OUTPUT_COLUMN_NAMES, bd.OUTPUT_JSON_KEYS):
                 batch[target_col] = batch[bd.auto_created_id_name].apply(
@@ -76,7 +86,6 @@ class Batcher:
             # Remove the explicit index column
             batch.loc[0, bd.full_response_column_name] = response #always include the full response - easier to remove after than choose to add
             batch.drop(columns=[bd.auto_created_id_name], inplace=True)
-
             return batch
 
         except Exception as e:
@@ -105,6 +114,11 @@ class Batcher:
                     return None, 0
                 else:
                     print("Continuing with batch processing...")
+
+        # Ensure all columns in batch are added to df, aligning by index
+        for col in bd.OUTPUT_COLUMN_NAMES + [bd.full_response_column_name]:
+            if col not in df.columns:
+                df[col] = ""
         
         start = time.time()
         num_batches = int(np.ceil(df.shape[0] / bd.BATCH_SIZE))
@@ -119,11 +133,6 @@ class Batcher:
             if batch is None and bd.best_effort:
                 print(f"Batch {i} processing failed")
                 continue
-
-            # Ensure all columns in batch are added to df, aligning by index
-            for col in batch.columns:
-                if col not in df.columns:
-                    df[col] = ""
                     
             df.loc[start_idx:end_idx-1, batch.columns] = batch.values
 

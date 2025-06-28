@@ -23,6 +23,10 @@ class Utilitas:
         else:
             errors += f"Not enough occurrences of separator '{separator}' in the response.\n"
 
+        #check if "json" prefix was put in:
+        if llm_response[start:end].strip().startswith("json"):
+            start += 4
+
         output = llm_response[start:end].strip()
         if not output or len(output) ==0:
             errors += "The extracted JSON string is empty.\n"
@@ -91,7 +95,11 @@ class Utilitas:
             if has_separator:
                 llm_response = Utilitas.p_jsonstr(llm_response, separator)
 
-            return json.loads(llm_response)
+            oout = json.loads(llm_response)
+            
+            if oout is None and verbose:
+                print(f"The JSON parser returned None from input {llm_response!r}. Ensure that your json separator in the structura is correct.")
+            return oout
         except json.JSONDecodeError as e:
             errmsg = ""
             errmsg += f"Error when parsing JSON: {e}. The offending portion is marked in red below:\n\n"

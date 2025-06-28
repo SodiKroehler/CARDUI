@@ -1,67 +1,60 @@
 # CARDUI 🃏  
 **Batch Orchestration Wrapper for LLMs in Python**
 
-CARDUI is a very simple wrapper over most major LLMS, that also supports within-prompt chunking (sort of like the old openai completions api) for pandas dataframes. It can also be used as just a wrapper for doing LLM processing with dataframes, as it takes less boilerplate and handles rate limiting, context window overflows, ect.
+cardui is a very simple wrapper over most major LLMS, that also supports within-prompt chunking (sort of like the old openai completions api) for pandas dataframes. It can also be used as just a wrapper for doing LLM processing with dataframes, as it takes less boilerplate and handles rate limiting, context window overflows, ect.
+
+## Installation
+```bash
+pip install cardui
+```
+You will have to install either openai, mistralai, google-genai, or anthropic, depending on your model.
+
+Additionally, you will need to obtain an API key, and add it to your environment variables. The auth() method allows passing a non-standard variable name, in case you do not want to use the default name.
+
+Docs for obtaining an API key can be found at:
+- [OpenAI / ChatGPT](https://platform.openai.com/account/api-keys)
+- [Anthropic / Claude](https://docs.anthropic.com/claude/docs/access-claude-api)
+- [Google / Gemini](https://ai.google.dev/gemini-api/docs/api-key)
+- [Mistral](https://docs.mistral.ai/getting-started/api-keys/)
 
 ---
 ## ⚡️ Quick Example
 
 ```python
-from CARDUI import Machina, Structura, Batcher
+from cardui import Machina, Structura, Batcher
 import pandas as pd
 
-# Step 1: Load your model (set relevant API keys in env vars), or supply custom name here
 model = Machina("OpenAI", "gpt-4")  # or "Anthropic", "Mistral", "Google"
-
-# Step 2: Define details
 struct1 = Structura()
-struct1.PROMPT = "Summarize each item below:\n#INPUT_OBJECT_HERE" 
-
-#Note: defaults to replace #INPUT_OBJECT_HERE with the value of each "CLEAN" row
-
-# Step 3: Run it on a DataFrame
+struct1.PROMPT = "Classify the tone of the following sentence as Positive, Negative, or Neutral:\n#INPUT_OBJECT_HERE" 
 df = pd.DataFrame({
     "ID": [1, 2],
-    "CLEAN": ["This is a long post.", "This is another."]
+    "CLEAN": ["This is a long post.", "You are so kind and wonderful!."]
 })
 
 result_df, duration = Batcher.call_chunked(df, model, struct1)
 
-# View results
-<TODO: PUT RESULTS HERE>
 ```
+The results will look like:
+| ID | CLEAN                      | LLM_RESPONSE          |
+|----|----------------------------|-----------------------|
+| 1  | This is a long post.       | Neutral               |
+| 2  | This is another.           | Positive              |
+
 
 ---
 ## Chunked Example
+A complete version, with all features explained, is available in all_settings_call.py in the docs folder of the git.
 
-```python
-from CARDUI import Machina, Structura, Batcher
-import pandas as pd
+## Feedback or Issues:
 
-model = Machina("OpenAI", "gpt-4")  # or "Anthropic", "Mistral", "Google"
+Please use the [GitHub Issues](https://github.com/SodiKroehler/CARDUI/issues) tab to:
 
-struct = Structura()
-struct.PROMPT = "Please rate the following customer reviews from 1-10 based on sentiment:\n#MY_INPUT_PLACEHOLDER"
-struct.INPUT_OBJECT_PLACEHOLDER = "#MY_INPUT_PLACEHOLDER"
-struct.INPUT_OBJECT_NAME = "reviews"
-struct.INPUT_COLUMN_NAMES = ["customer_name", "review_body"]
-struct.INPUT_JSON_KEYS = ["customer", "customer_review"]
-struct.OUTPUT_OBJECT_NAME = "ratings"
-struct.OUTPUT_JSON_KEYS = ["score"]
-struct.OUTPUT_JSON_KEY_DESCRIPTIONS = ["A sentiment score from 1 (very negative) to 10 (very positive)"]
-struct.OUTPUT_COLUMN_NAMES = ["string_score"]
-struct.MAX_ANTICIPATED_OUTPUT_LENGTH = 20
-struct.batch_size = struct.get_dynamic_batch_size() #sets the max to fit in the context window
-struct.verbose = True
-struct.jsonify()  # Enable JSON-based batching and parsing
+- Report a bug
+- Ask a question
+- Request a feature
 
-df = pd.DataFrame({
-    "customer_name": ["Alphonzo Dwindli", "Gertrude Maximillian"],
-    "body": ["Gubernatorial Delights found in this ice cream.", "Sasquatach wouldn't eat this ice cream. It's horrible."]
-})
-
-result_df, duration = Batcher.call_chunked(df, model, struct)
-
-# View results
-<TODO: PUT RESULTS HERE>
-```
+When submitting a bug, include:
+- Steps to reproduce
+- Expected vs. actual behavior
+- Code snippets or logs if possible

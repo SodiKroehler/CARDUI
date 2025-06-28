@@ -1,6 +1,5 @@
-from ..static import MODEL_CONTEXT_WINDOW_TOKENS
-import math as Math
 
+from ..static import STANDARD_JSONIFY_PROMPT
 class Structura:
 
     #TODO: enable mutiple input placeholders?
@@ -46,22 +45,8 @@ class Structura:
         if self.jsonified:
             return
         
-        json_prompt = """
-        
-        Output your answer in valid JSON, in the following structure:
-
-        ```
-        { 
-            #OUTPUT_OBJECT_NAME: [
-                {
-                    "#auto_created_id_name": "the #auto_created_id_name of the input object",
-                    #rest_of_the_output_fields
-                }
-            ]
-        }
-        ```
-        """
-        json_prompt = json_prompt.replace("#OUTPUT_OBJECT_NAME", self.OUTPUT_OBJECT_NAME)
+       
+        json_prompt = STANDARD_JSONIFY_PROMPT.replace("#OUTPUT_OBJECT_NAME", self.OUTPUT_OBJECT_NAME)
         json_prompt = json_prompt.replace("#auto_created_id_name", self.auto_created_id_name)
         outs = [f"\"{key}\": \"{descr}\"" for key, descr in zip(self.OUTPUT_JSON_KEYS, self.OUTPUT_JSON_KEY_DESCRIPTIONS)]
         json_prompt = json_prompt.replace("#rest_of_the_output_fields", ",\n".join(outs))
@@ -73,23 +58,3 @@ class Structura:
             print(self.PROMPT)
 
         self.jsonified = True
-
-
-    def get_dynamic_batch_size(self, machina):
-        if not self.jsonified or self.MAX_ANTICIPATED_OUTPUT_WORDS < 0 or self.MAX_ANTICIPATED_INPUT_WORDS < 0:
-            raise ValueError("Cannot get dynamic batch size. Please ensure the prompt is jsonified and MAX_ANTICIPATED_OUTPUT_WORDS and MAX_ANTICIPATED_INPUT_WORDS are set.")
-        
-        output_overhead = len(self.OUTPUT_JSON_KEYS) * 10
-        total_input_tokens = (self.MAX_ANTICIPATED_INPUT_WORDS + len(self.PROMPT.split())) * 1.3 #prompt by now includes overhead
-        total_output_tokens = (self.MAX_ANTICIPATED_OUTPUT_WORDS + output_overhead) * 1.3
-
-        # Get the context window size for the current model
-        context_window = MODEL_CONTEXT_WINDOW_TOKENS.get((machina.model_provider, machina.model_name), {"input": 0, "output": 0})
-        input_tokens = context_window["input"]
-        output_tokens = context_window["output"]
-
-
-        dynamic_batch_size = max(Math.floor(input_tokens / total_input_tokens),
-                                     Math.floor(output_tokens / total_output_tokens))
-
-        return dynamic_batch_size

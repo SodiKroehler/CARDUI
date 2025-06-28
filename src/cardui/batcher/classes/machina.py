@@ -204,7 +204,7 @@ class Machina:
         output_overhead = len(STANDARD_JSONIFY_PROMPT[85:].replace("#OUTPUT_OBJECT_NAME", bd.OUTPUT_OBJECT_NAME).replace("#auto_created_id_name", "").replace("#rest_of_the_output_fields", "").split()) * 1.3
         context_window = MODEL_CONTEXT_WINDOW_TOKENS.get((self.model_provider, self.model_name), 4096)
         
-        per_row_input_overhead = [f'"{' '.join(["word" for i in range(df[col].dropna().str.split().str.len().max())])}"' for col in bd.INPUT_COLUMN_NAMES]
+        per_row_input_overhead = ['"' + ' '.join(["word" for _ in range(df[col].dropna().str.split().str.len().max())]) + '"' for col in bd.INPUT_COLUMN_NAMES]
         per_row_input_overhead = '{' + f'"{bd.auto_created_id_name}": "0", ' + ", ".join(per_row_input_overhead) + " }"
         per_row_input_overhead = f'{{"{bd.OUTPUT_OBJECT_NAME}": [\n  ' + ",\n  ".join(per_row_input_overhead) + "\n]}}"
         per_row_input_overhead = len(per_row_input_overhead.split()) * 1.3
